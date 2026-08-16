@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+    <meta name="theme-color" content="#007AFF">
+    <title>Gym Tracker</title>
+
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-180.png">
+    <!-- Opaque (not translucent) status bar — matches the dark theme without
+         needing extra safe-area-inset-top padding through the rest of the app. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Gym Tracker">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main id="app">
+        <!-- Today -->
+        <section id="today-tab" class="tab-content active">
+            <header class="tab-header">
+                <h1 id="today-title">Today</h1>
+            </header>
+            <div id="today-body"></div>
+        </section>
+
+        <!-- Exercise Library -->
+        <section id="library-tab" class="tab-content">
+            <header class="tab-header">
+                <h1>Library</h1>
+                <span id="library-count" class="header-count"></span>
+            </header>
+
+            <div class="search-filters">
+                <input type="search" id="search-input" class="form-input" placeholder="Search exercises…" autocomplete="off">
+                <div class="filter-row">
+                    <select id="muscle-filter" class="form-input"></select>
+                    <select id="equipment-filter" class="form-input"></select>
+                </div>
+            </div>
+
+            <div id="exercises-list" class="stack"></div>
+
+            <button id="add-exercise-btn" class="btn btn-outline btn-block spaced" type="button">
+                + Add Custom Exercise
+            </button>
+        </section>
+
+        <!-- Templates -->
+        <section id="templates-tab" class="tab-content">
+            <header class="tab-header">
+                <h1>Templates</h1>
+            </header>
+            <div id="templates-list" class="stack"></div>
+            <button id="create-template-btn" class="btn btn-outline btn-block spaced" type="button">
+                + New Template
+            </button>
+        </section>
+
+        <!-- History -->
+        <section id="history-tab" class="tab-content">
+            <header class="tab-header">
+                <h1>History</h1>
+                <button id="settings-btn" class="icon-btn" type="button" aria-label="Settings">⚙️</button>
+            </header>
+            <div id="history-body"></div>
+        </section>
+
+        <!-- Personal Records -->
+        <section id="prs-tab" class="tab-content">
+            <header class="tab-header">
+                <h1>Records</h1>
+            </header>
+            <div id="prs-body"></div>
+        </section>
+    </main>
+
+    <!-- Rest timer bar (Stage 2) -->
+    <div id="rest-bar" class="rest-bar" hidden>
+        <div class="rest-info">
+            <span id="rest-label" class="rest-label">Rest</span>
+            <span id="rest-countdown" class="rest-countdown">0:00</span>
+        </div>
+        <div class="rest-actions">
+            <button id="rest-minus" class="btn btn-ghost" type="button">−15s</button>
+            <button id="rest-plus" class="btn btn-ghost" type="button">+30s</button>
+            <button id="rest-skip" class="btn btn-primary" type="button">Skip</button>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-btn active" type="button" data-tab="today">
+            <span class="nav-icon">🏋️</span><span class="nav-label">Today</span>
+        </button>
+        <button class="nav-btn" type="button" data-tab="templates">
+            <span class="nav-icon">📋</span><span class="nav-label">Templates</span>
+        </button>
+        <button class="nav-btn" type="button" data-tab="library">
+            <span class="nav-icon">📚</span><span class="nav-label">Library</span>
+        </button>
+        <button class="nav-btn" type="button" data-tab="history">
+            <span class="nav-icon">📊</span><span class="nav-label">History</span>
+        </button>
+        <button class="nav-btn" type="button" data-tab="prs">
+            <span class="nav-icon">🏆</span><span class="nav-label">Records</span>
+        </button>
+    </nav>
+
+    <!-- Modal: add / edit exercise -->
+    <div id="exercise-form-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="exercise-form-title">Add Exercise</h2>
+                <button class="modal-close icon-btn" type="button" aria-label="Close">&times;</button>
+            </div>
+            <form id="exercise-form" class="modal-body">
+                <label>
+                    <span class="label-text">Name</span>
+                    <input type="text" id="exercise-name" class="form-input" required>
+                </label>
+                <label>
+                    <span class="label-text">Muscle group</span>
+                    <select id="exercise-muscle" class="form-input" required></select>
+                </label>
+                <label>
+                    <span class="label-text">Equipment</span>
+                    <select id="exercise-equipment" class="form-input" required></select>
+                </label>
+                <label>
+                    <span class="label-text">Attachment / setup <span class="optional">optional</span></span>
+                    <input type="text" id="exercise-attachment" class="form-input" placeholder="e.g. rope attachment, high pulley">
+                </label>
+                <label>
+                    <span class="label-text">Form notes</span>
+                    <textarea id="exercise-notes" class="form-input" rows="3" placeholder="2–3 sentences on how to run the movement" required></textarea>
+                </label>
+
+                <div class="media-field">
+                    <span class="label-text">Demo clip or photo <span class="optional">optional</span></span>
+                    <div id="exercise-media-preview" class="media-slot"></div>
+                    <div class="media-buttons">
+                        <label class="btn btn-outline btn-small file-btn">
+                            Choose from phone
+                            <input type="file" id="exercise-media-input" accept="image/*,video/*" hidden>
+                        </label>
+                        <button type="button" id="exercise-media-clear" class="btn btn-ghost btn-small" hidden>Remove</button>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: exercise details -->
+    <div id="exercise-details-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="detail-exercise-name"></h2>
+                <button class="modal-close icon-btn" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div id="exercise-details-body" class="modal-body"></div>
+            <div id="exercise-detail-actions" class="modal-actions"></div>
+        </div>
+    </div>
+
+    <!-- Modal: create / edit template -->
+    <div id="template-form-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="template-form-title">New Template</h2>
+                <button class="modal-close icon-btn" type="button" aria-label="Close">&times;</button>
+            </div>
+            <form id="template-form" class="modal-body">
+                <label>
+                    <span class="label-text">Template name</span>
+                    <input type="text" id="template-name" class="form-input" placeholder="e.g. Push Day" required>
+                </label>
+
+                <div id="template-rows" class="stack"></div>
+
+                <button type="button" id="template-add-exercise" class="btn btn-outline btn-block">
+                    + Add Exercise
+                </button>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="delete-template-btn" hidden>Delete</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: exercise picker -->
+    <div id="exercise-picker-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="picker-title">Add Exercise</h2>
+                <button class="modal-close icon-btn" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="search" id="picker-search" class="form-input" placeholder="Search…" autocomplete="off">
+                <div id="picker-list" class="picker-list"></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-primary modal-cancel">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: workout detail (Stage 3) -->
+    <div id="workout-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="workout-detail-title"></h2>
+                <button class="modal-close icon-btn" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div id="workout-detail-body" class="modal-body"></div>
+            <div id="workout-detail-actions" class="modal-actions"></div>
+        </div>
+    </div>
+
+    <!-- Modal: settings (Stage 3) -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="modal-close icon-btn" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body" id="settings-body"></div>
+        </div>
+    </div>
+
+    <!-- Modal: confirm -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content narrow">
+            <div class="modal-header">
+                <h2 id="confirm-title">Are you sure?</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-body"></p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" id="confirm-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-accept">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

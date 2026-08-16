@@ -1,0 +1,1550 @@
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #007AFF;
+    --primary-dark: #0051D5;
+    --accent: #5AC8FA;
+    --danger: #FF3B30;
+    --success: #34C759;
+    --warning: #FF9500;
+
+    --text-primary: #000;
+    --text-secondary: #6B6B70;
+    --bg: #FFFFFF;
+    --bg-secondary: #F4F4F7;
+    --bg-raised: #FFFFFF;
+    --border: #E2E2E7;
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+
+    --nav-height: 64px;
+    --radius: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-primary: #FFFFFF;
+        --text-secondary: #9E9EA5;
+        --bg: #121214;
+        --bg-secondary: #1E1E21;
+        --bg-raised: #26262A;
+        --border: #35353A;
+        --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Components below set display explicitly, which would otherwise win over the
+   hidden attribute's UA `display: none`. */
+[hidden] {
+    display: none !important;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    /* Stops the whole page rubber-banding under the fixed nav on iOS. */
+    overscroll-behavior-y: contain;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+#app {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 24px);
+}
+
+.tab-content {
+    display: none;
+    padding: 16px;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.18s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+}
+
+.tab-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0 20px;
+}
+
+.tab-header h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.header-count {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* --- Bottom navigation ------------------------------------------------ */
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+}
+
+.nav-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-btn.active {
+    color: var(--primary);
+}
+
+.nav-icon {
+    font-size: 21px;
+    line-height: 1;
+}
+
+/* --- Layout helpers --------------------------------------------------- */
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.spaced {
+    margin-top: 16px;
+}
+
+.hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.optional {
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.empty-state.small {
+    padding: 20px;
+    font-size: 14px;
+}
+
+.fatal-error {
+    background: var(--danger);
+    color: #fff;
+    padding: 14px 16px;
+    font-size: 14px;
+}
+
+/* --- Cards ------------------------------------------------------------ */
+
+.card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-family: inherit;
+    color: inherit;
+    transition: transform 0.12s ease, opacity 0.12s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button.card {
+    cursor: pointer;
+}
+
+button.card:active {
+    transform: scale(0.985);
+    opacity: 0.85;
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 650;
+    letter-spacing: -0.2px;
+}
+
+.card-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+}
+
+.card-preview {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+}
+
+.card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.card-actions .btn {
+    flex: 1;
+}
+
+.badge-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.badge-muscle {
+    background: var(--muscle-color, var(--primary));
+    border-color: transparent;
+    color: #fff;
+}
+
+/* One hue per muscle group, shared by the badge (Library/Records cards) and
+   the small dot (Templates/picker/workout rows, where a full badge won't
+   fit) — same color for "Legs" wherever it shows up in the app. Hues are
+   spaced away from the semantic colors (--danger/--success/--warning/--primary)
+   so a badge is never mistaken for a status indicator. */
+.badge-muscle[data-muscle="Chest"],
+.muscle-dot[data-muscle="Chest"]     { --muscle-color: hsl(350 60% 45%); }
+.badge-muscle[data-muscle="Back"],
+.muscle-dot[data-muscle="Back"]      { --muscle-color: hsl(255 55% 52%); }
+.badge-muscle[data-muscle="Shoulders"],
+.muscle-dot[data-muscle="Shoulders"] { --muscle-color: hsl(20 70% 46%); }
+.badge-muscle[data-muscle="Biceps"],
+.muscle-dot[data-muscle="Biceps"]    { --muscle-color: hsl(285 55% 52%); }
+.badge-muscle[data-muscle="Triceps"],
+.muscle-dot[data-muscle="Triceps"]   { --muscle-color: hsl(325 60% 48%); }
+.badge-muscle[data-muscle="Forearms"],
+.muscle-dot[data-muscle="Forearms"]  { --muscle-color: hsl(175 55% 34%); }
+.badge-muscle[data-muscle="Legs"],
+.muscle-dot[data-muscle="Legs"]      { --muscle-color: hsl(140 45% 36%); }
+.badge-muscle[data-muscle="Core"],
+.muscle-dot[data-muscle="Core"]      { --muscle-color: hsl(45 75% 40%); }
+
+.muscle-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--muscle-color, var(--text-secondary));
+    flex-shrink: 0;
+}
+
+.badge-equipment {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    border-color: transparent;
+    color: color-mix(in srgb, var(--accent) 70%, var(--text-primary));
+}
+
+.badge-custom {
+    background: color-mix(in srgb, var(--warning) 20%, transparent);
+    border-color: transparent;
+    color: var(--warning);
+}
+
+/* --- Buttons ---------------------------------------------------------- */
+
+.btn {
+    padding: 13px 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 650;
+    font-family: inherit;
+    cursor: pointer;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.12s ease, opacity 0.12s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+
+.btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+}
+
+.btn-ghost {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.btn-block { width: 100%; }
+
+.btn-small {
+    min-height: 38px;
+    padding: 8px 14px;
+    font-size: 14px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.icon-btn:active { background: var(--bg-secondary); }
+.icon-btn:disabled { opacity: 0.25; pointer-events: none; }
+.icon-btn.danger { color: var(--danger); }
+
+.file-btn {
+    cursor: pointer;
+}
+
+/* --- Forms ------------------------------------------------------------ */
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label-text {
+    font-size: 13px;
+    font-weight: 650;
+    color: var(--text-primary);
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    /* 16px keeps iOS Safari from zooming the viewport on focus. */
+    font-size: 16px;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+select.form-input {
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+        linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 36px;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+textarea.form-input {
+    resize: vertical;
+    min-height: 84px;
+    line-height: 1.5;
+}
+
+.search-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* --- Modals ----------------------------------------------------------- */
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 640px;
+    max-height: 92vh;
+    background: var(--bg);
+    border-radius: 20px 20px 0 0;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow: hidden;
+}
+
+.modal-content.narrow {
+    max-width: 420px;
+    margin: auto;
+    border-radius: 20px;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(6%); opacity: 0.6; }
+    to { transform: none; opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.modal-header h2 {
+    font-size: 18px;
+    font-weight: 650;
+    letter-spacing: -0.2px;
+}
+
+.modal-body {
+    padding: 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.modal-actions .btn {
+    flex: 1;
+}
+
+/* A form is the scroll container in some sheets, so its actions bar needs the
+   same treatment without a nested wrapper. */
+form.modal-body .modal-actions {
+    margin: 8px -16px -16px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    bottom: -16px;
+}
+
+.detail-field + .detail-field {
+    margin-top: 14px;
+}
+
+.detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.detail-value {
+    margin-top: 2px;
+    line-height: 1.55;
+}
+
+.detail-value.muscle-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- Media ------------------------------------------------------------ */
+
+.media-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.media-slot,
+.media-frame {
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+}
+
+.media-frame {
+    margin-bottom: 16px;
+}
+
+.media-preview {
+    display: block;
+    width: 100%;
+    max-height: 260px;
+    object-fit: cover;
+}
+
+.media-preview.small {
+    max-height: 160px;
+}
+
+.media-placeholder {
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.media-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+/* --- Steppers --------------------------------------------------------- */
+
+/* Two columns, not three: at 375px a third column starves the value field so
+   badly that "90s" clips. Rest takes its own full-width row. */
+.stepper-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.stepper-field.span-2 {
+    grid-column: 1 / -1;
+}
+
+.stepper-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.stepper-label {
+    font-size: 11px;
+    font-weight: 650;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.stepper {
+    display: flex;
+    align-items: stretch;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.stepper-btn {
+    width: 36px;
+    min-height: 44px;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 19px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.stepper-btn:active {
+    background: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+.stepper-value {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 8px 1px;
+}
+
+.stepper-input {
+    width: 100%;
+    min-width: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    padding: 0;
+}
+
+.stepper-input:focus {
+    outline: none;
+}
+
+/* Keep the number next to its unit instead of stretching the input and
+   flinging the suffix to the far edge of a wide field. */
+.stepper-value.has-suffix .stepper-input {
+    max-width: 4ch;
+}
+
+.stepper-suffix {
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+/* --- Template builder ------------------------------------------------- */
+
+.template-row {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+}
+
+.template-row-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.template-row-name {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 650;
+    font-size: 15px;
+}
+
+.template-row-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.row-controls {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.row-controls .icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+}
+
+/* --- Picker ----------------------------------------------------------- */
+
+.picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.picker-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    color: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.picker-row:active {
+    background: var(--bg-raised);
+    transform: scale(0.99);
+}
+
+.picker-row-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.picker-name {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.picker-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.picker-add {
+    color: var(--primary);
+    font-size: 22px;
+    font-weight: 400;
+    flex-shrink: 0;
+    transition: color 0.15s ease-out, transform 0.15s ease-out;
+}
+
+/* Tap confirmation — flashes green with a checkmark for a beat before the
+   row disappears from the list (it's excluded from future picks). */
+.picker-row-picked {
+    pointer-events: none;
+    border-color: var(--success);
+    background: color-mix(in srgb, var(--success) 16%, var(--bg-secondary));
+    animation: pickerRowPop 0.28s ease-out;
+}
+
+.picker-row-picked .picker-add {
+    color: var(--success);
+    transform: scale(1.2);
+}
+
+@keyframes pickerRowPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.015); }
+    100% { transform: scale(1); }
+}
+
+/* --- Rest timer bar --------------------------------------------------- */
+
+.rest-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--nav-height) + env(safe-area-inset-bottom));
+    z-index: 120;
+    background: var(--primary);
+    color: #fff;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.18);
+}
+
+.rest-bar[hidden] {
+    display: none;
+}
+
+/* Deeper than --success: white on #34C759 is about 2.3:1, which is unreadable
+   at arm's length in a bright gym, and the pulse only makes it paler. */
+.rest-bar.finished {
+    background: #0F7A33;
+    animation: restPulse 0.7s ease-in-out 3;
+}
+
+@keyframes restPulse {
+    50% { background: #16A344; }
+}
+
+.rest-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.rest-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    opacity: 0.85;
+    font-weight: 600;
+}
+
+.rest-countdown {
+    font-size: 30px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+}
+
+.rest-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.rest-actions .btn {
+    min-height: 42px;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.rest-actions .btn-ghost {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+.rest-actions .btn-primary {
+    background: #fff;
+    color: var(--primary);
+}
+
+.rest-bar.finished .rest-actions .btn-primary {
+    color: #0F7A33;
+}
+
+/* --- Workout logging -------------------------------------------------- */
+
+.workout-banner {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.workout-title {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.workout-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* --- Elapsed-time stopwatch -------------------------------------------- */
+
+.workout-timer {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 9px;
+    padding: 6px 0 16px;
+}
+
+.workout-timer-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.workout-timer-value {
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+    transition: color 0.2s;
+}
+
+.workout-timer-paused-tag {
+    display: none;
+    font-size: 11px;
+    font-weight: 650;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--warning) 20%, transparent);
+    color: var(--warning);
+}
+
+.workout-timer.paused .workout-timer-value {
+    color: var(--warning);
+}
+
+.workout-timer.paused .workout-timer-paused-tag {
+    display: inline-block;
+}
+
+.exercise-block {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+/* Entrance for a freshly added exercise. Starts paused at frame one — added
+   the instant it's inserted, which usually happens while the picker sheet
+   still covers the screen — and is set running in JS once the sheet closes
+   and it's actually visible. */
+@keyframes exerciseEnter {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.94);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(-2px) scale(1.01);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.exercise-block-new {
+    animation: exerciseEnter 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards paused;
+}
+
+.exercise-block-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 14px 13px 6px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* The middle column is the only flexible one — it absorbs whatever space
+   the fixed-width handle and controls don't need, which is what keeps the
+   handle pinned left and the controls pinned right without relying on
+   justify-content (that stops working once there are three flex children). */
+.exercise-block-title {
+    flex: 1;
+    min-width: 0;
+    padding-top: 3px;
+}
+
+.exercise-block-name {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 650;
+    font-size: 16px;
+}
+
+.exercise-block-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* --- Drag-to-reorder handle --------------------------------------------- */
+
+.exercise-drag-handle {
+    flex-shrink: 0;
+    width: 30px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--text-secondary);
+    cursor: grab;
+    /* Without this, a vertical drag that starts on the handle gets read as a
+       page-scroll gesture on iOS/Android before our own pointermove ever
+       sees it — this is what hands the gesture to us instead. */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.exercise-drag-handle:active {
+    color: var(--primary);
+    cursor: grabbing;
+}
+
+.exercise-block.dragging {
+    position: relative;
+    z-index: 30;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.exercise-block.dragging .exercise-drag-handle {
+    color: var(--primary);
+    cursor: grabbing;
+}
+
+.set-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.set-row {
+    display: grid;
+    grid-template-columns: 22px 1fr 1fr 44px;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.set-row:last-child {
+    border-bottom: none;
+}
+
+.set-row.done {
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+}
+
+.set-index-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.set-index {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Swaps in for the set number while the block is in edit mode. */
+.set-remove {
+    display: none;
+    width: 30px;
+    height: 34px;
+    margin-left: -4px;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-size: 22px;
+    font-family: inherit;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.exercise-block.editing .set-index {
+    display: none;
+}
+
+.exercise-block.editing .set-remove {
+    display: flex;
+}
+
+.edit-toggle {
+    padding: 8px 6px;
+    font-size: 13px;
+}
+
+.set-check {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--bg-raised);
+    color: var(--text-secondary);
+    font-size: 19px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.set-check.done {
+    background: var(--success);
+    border-color: var(--success);
+    color: #fff;
+}
+
+/* --- Exercise notes --------------------------------------------------- */
+
+.note-banner {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    margin: 10px 12px 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--warning) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+}
+
+.note-pin {
+    font-size: 14px;
+    line-height: 1.4;
+    flex-shrink: 0;
+}
+
+.note-banner-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.note-done {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+    background: transparent;
+    color: var(--warning);
+    font-size: 16px;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.note-done:active {
+    background: color-mix(in srgb, var(--warning) 25%, transparent);
+}
+
+.note-banner-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--warning);
+}
+
+.note-banner-text {
+    font-size: 14px;
+    line-height: 1.45;
+    margin-top: 1px;
+}
+
+.note-section {
+    padding: 0 12px 12px;
+}
+
+.note-input {
+    min-height: 62px;
+    font-size: 16px;
+    resize: vertical;
+}
+
+.note-field-label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* Note fields default to workout-block padding (0 12px 12px) — flush that
+   out when the field sits inside a container that already pads itself. */
+.note-field-inline .note-section,
+.template-row .note-section {
+    padding: 0;
+}
+
+.template-row .note-section {
+    margin-top: 10px;
+}
+
+.ghost-hint {
+    font-size: 11px;
+    color: var(--text-secondary);
+    padding: 6px 14px 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.block-actions {
+    display: flex;
+    gap: 8px;
+    padding: 4px 12px 12px;
+}
+
+.block-actions .btn {
+    flex: 1;
+}
+
+.stepper-head {
+    display: grid;
+    grid-template-columns: 22px 1fr 1fr 44px;
+    gap: 6px;
+    padding: 10px 12px 2px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.stepper-head span:nth-child(2),
+.stepper-head span:nth-child(3) {
+    text-align: center;
+}
+
+.rest-setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+}
+
+.rest-setting .stepper {
+    width: 132px;
+    flex-shrink: 0;
+}
+
+.link-btn {
+    display: block;
+    background: none;
+    border: none;
+    padding: 2px 0 0;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--primary);
+    cursor: pointer;
+    text-align: left;
+}
+
+.finish-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.finish-actions .btn:first-child {
+    flex: 0 0 34%;
+}
+
+.finish-actions .btn:last-child {
+    flex: 1;
+}
+
+.footnote {
+    margin-top: 24px;
+    text-align: center;
+    padding: 0 8px;
+}
+
+/* The rest bar sits above the nav, so the last card needs clearance to stay
+   reachable while a timer is running. */
+body.resting-room #app {
+    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 100px);
+}
+
+/* --- Personal records --------------------------------------------------- */
+
+.pr-card {
+    padding: 14px 16px;
+}
+
+.pr-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pr-weight {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.pr-weight-value {
+    font-size: 20px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+    color: var(--primary);
+    white-space: nowrap;
+}
+
+.pr-weight-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.pr-date {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+/* --- History ---------------------------------------------------------- */
+
+.history-group-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-secondary);
+    margin: 18px 0 8px;
+}
+
+.history-group-label:first-child {
+    margin-top: 0;
+}
+
+.summary-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.summary-tile {
+    flex: 1;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+}
+
+.summary-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+}
+
+.summary-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-top: 2px;
+}
+
+.history-exercise {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.history-exercise:last-child {
+    border-bottom: none;
+}
+
+.history-exercise-name {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 650;
+    margin-bottom: 6px;
+}
+
+.history-sets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.history-set {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+
+/* --- Settings --------------------------------------------------------- */
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.setting-row:last-child {
+    border-bottom: none;
+}
+
+.setting-title {
+    font-weight: 650;
+}
+
+.setting-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.segmented {
+    display: flex;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.segmented button {
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 650;
+    color: var(--text-secondary);
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.segmented button.active {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* --- Toast ------------------------------------------------------------ */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 20px);
+    transform: translate(-50%, 16px);
+    background: var(--text-primary);
+    color: var(--bg);
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 400;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    max-width: 90vw;
+    text-align: center;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+/* A toast fired while a modal is open (e.g. picking exercises from a
+   full-screen sheet) would otherwise sit at its usual spot near the bottom
+   nav — directly on top of that sheet's own scrolling content and action
+   bar. Move it clear, to the open sliver above the sheet instead. */
+body.modal-open .toast {
+    bottom: auto;
+    top: calc(env(safe-area-inset-top) + 14px);
+    transform: translate(-50%, -12px);
+}
+
+body.modal-open .toast.visible {
+    transform: translate(-50%, 0);
+}
+
+@media (hover: hover) {
+    .btn:hover,
+    button.card:hover,
+    .picker-row:hover {
+        opacity: 0.92;
+    }
+}
