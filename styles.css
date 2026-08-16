@@ -711,6 +711,33 @@ form.modal-body .modal-actions {
     flex-shrink: 0;
 }
 
+/* Narrow variant for the per-set RIR column, where there's only ~56px to
+   work with next to reps and weight. */
+.stepper-compact .stepper-btn {
+    width: 22px;
+    min-height: 40px;
+    font-size: 15px;
+}
+
+.stepper-compact .stepper-value {
+    padding: 8px 0;
+}
+
+.stepper-compact .stepper-input {
+    font-size: 13px;
+}
+
+/* Reps/weight steppers in the set row give up a little button width to the
+   RIR column alongside them — without this "10" clips down to "1". */
+.stepper-set .stepper-btn {
+    width: 30px;
+    min-height: 40px;
+}
+
+.stepper-set .stepper-input {
+    font-size: 14px;
+}
+
 /* --- Template builder ------------------------------------------------- */
 
 .template-row {
@@ -1080,11 +1107,19 @@ form.modal-body .modal-actions {
 
 .set-row {
     display: grid;
-    grid-template-columns: 22px 1fr 1fr 44px;
+    grid-template-columns: 22px 1fr 1fr 56px 44px;
     align-items: center;
     gap: 6px;
     padding: 8px 12px;
     border-bottom: 1px solid var(--border);
+}
+
+.set-rir-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 13px;
 }
 
 .set-row:last-child {
@@ -1093,6 +1128,14 @@ form.modal-body .modal-actions {
 
 .set-row.done {
     background: color-mix(in srgb, var(--success) 10%, transparent);
+}
+
+.set-row-warmup {
+    background: color-mix(in srgb, var(--warning) 7%, transparent);
+}
+
+.set-row-warmup.done {
+    background: color-mix(in srgb, var(--warning) 16%, transparent);
 }
 
 .set-index-cell {
@@ -1106,6 +1149,10 @@ form.modal-body .modal-actions {
     font-weight: 700;
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
+}
+
+.set-index-warmup {
+    color: var(--warning);
 }
 
 /* Swaps in for the set number while the block is in edit mode. */
@@ -1159,6 +1206,20 @@ form.modal-body .modal-actions {
     background: var(--success);
     border-color: var(--success);
     color: #fff;
+}
+
+/* --- Progression ------------------------------------------------------ */
+
+.progress-badge {
+    margin: 10px 12px 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--success) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.4;
+    color: var(--success);
 }
 
 /* --- Exercise notes --------------------------------------------------- */
@@ -1262,7 +1323,7 @@ form.modal-body .modal-actions {
 
 .stepper-head {
     display: grid;
-    grid-template-columns: 22px 1fr 1fr 44px;
+    grid-template-columns: 22px 1fr 1fr 56px 44px;
     gap: 6px;
     padding: 10px 12px 2px;
     font-size: 10px;
@@ -1273,7 +1334,8 @@ form.modal-body .modal-actions {
 }
 
 .stepper-head span:nth-child(2),
-.stepper-head span:nth-child(3) {
+.stepper-head span:nth-child(3),
+.stepper-head span:nth-child(4) {
     text-align: center;
 }
 

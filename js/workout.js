@@ -39,11 +39,15 @@ function releaseWakeLock() {
 // counter, same reasoning as the rest timer: a backgrounded tab throttles
 // setInterval, so only wall-clock math stays accurate through that.
 
+// Warm-up sets are excluded from every headline count (this, the summary
+// banner, "all done" pausing, PRs) — they're a ramp-up, not logged training
+// volume, same as the plan's own "do one lighter set before the first heavy
+// lift" rule.
 function allSetsDone() {
     if (!session) return false;
-    const total = session.entries.reduce((sum, e) => sum + e.sets.length, 0);
+    const total = session.entries.reduce((sum, e) => sum + e.sets.filter((s) => !s.warmup).length, 0);
     if (total === 0) return false; // nothing to finish yet — don't show "done"
-    const done = session.entries.reduce((sum, e) => sum + e.sets.filter((s) => s.done).length, 0);
+    const done = session.entries.reduce((sum, e) => sum + e.sets.filter((s) => !s.warmup && s.done).length, 0);
     return done === total;
 }
 
@@ -82,6 +86,9 @@ function entryFromTemplate(templateEntry) {
     // Seed the bar with what you used last time — far more often right than
     // zero, and one less thing to dial in between sets.
     const seedWeight = previous?.sets.at(-1)?.weightKg ?? 0;
+    // What you actually hit last time beats the template's static target,
+    // which itself beats the flat app-wide default.
+    const seedRir = previous?.sets.at(-1)?.rir ?? templateEntry.rir ?? DEFAULTS.rir;
 
     return {
         exerciseId: templateEntry.exerciseId,
@@ -91,10 +98,15 @@ function entryFromTemplate(templateEntry) {
         equipment: exercise?.equipment || '',
         restSeconds: templateEntry.restSeconds,
         targetReps: templateEntry.reps,
+        // Snapshotted at session start, same as targetReps — the fixed bar
+        // "ready to progress" checks every set against, independent of
+        // whatever set.rir gets edited to mid-session.
+        targetRir: templateEntry.rir ?? DEFAULTS.rir,
         note: '',
         sets: Array.from({ length: templateEntry.sets }, () => ({
             reps: templateEntry.reps,
             weightKg: seedWeight,
+            rir: seedRir,
             done: false,
             completedAt: null,
         })),
@@ -142,7 +154,7 @@ export async function resumeActive() {
 }
 
 async function finishWorkout() {
-    const doneSets = session.entries.reduce((sum, entry) => sum + entry.sets.filter((s) => s.done).length, 0);
+    const doneSets = session.entries.reduce((sum, entry) => sum + entry.sets.filter((s) => !s.warmup && s.done).length, 0);
     // A note ("shoulder twinged, skipped it") is worth keeping even with
     // nothing ticked — only offer to discard when there's truly nothing to save.
     const hasNote = session.entries.some((entry) => entry.note?.trim());
@@ -170,9 +182,11 @@ async function finishWorkout() {
 
     // Keep only what was actually performed, so history reads as a record of
     // work done rather than of work planned — but never drop an exercise you
-    // left a note on ("shoulder twinged, skipped it" is worth keeping).
+    // left a note on ("shoulder twinged, skipped it" is worth keeping). Warm-up
+    // sets never make the cut either way — they're a ramp-up, not logged
+    // training volume, so History and Records only ever see working sets.
     session.entries = session.entries
-        .map((entry) => ({ ...entry, sets: entry.sets.filter((s) => s.done) }))
+        .map((entry) => ({ ...entry, sets: entry.sets.filter((s) => s.done && !s.warmup) }))
         .filter((entry) => entry.sets.length > 0 || entry.note?.trim());
     session.status = 'completed';
     session.finishedAt = new Date().toISOString();
@@ -269,6 +283,18 @@ function noteSection(entry) {
     return el('div', { class: 'note-section' }, [addLink, field]);
 }
 
+/**
+ * Double progression, per the plan: once every working set reaches the top
+ * of its rep range while still at (or above) the intended RIR — not by
+ * grinding past it — it's time to add weight rather than repeat the same
+ * numbers next session.
+ */
+function isReadyToProgress(entry) {
+    const working = entry.sets.filter((s) => !s.warmup);
+    if (!working.length || !Number.isFinite(entry.targetReps)) return false;
+    return working.every((s) => s.done && s.reps >= entry.targetReps && s.rir >= (entry.targetRir ?? 0));
+}
+
 function carriedNote(entry) {
     const previous = lastNote(entry.exerciseId);
     if (!previous) return null;
@@ -307,7 +333,7 @@ function carriedNote(entry) {
     return banner;
 }
 
-function setRow(entry, set, index, refreshSets) {
+function setRow(entry, set, index, label, refreshSets, refreshProgress) {
     const unit = getUnit();
 
     const repsStepper = stepper({
@@ -315,7 +341,8 @@ function setRow(entry, set, index, refreshSets) {
         min: 1, // a logged set can't have zero reps
         max: 999,
         label: 'reps',
-        onChange: (value) => { set.reps = value; updateBanner(); persist(); },
+        className: 'stepper-set',
+        onChange: (value) => { set.reps = value; updateBanner(); refreshProgress(); persist(); },
     });
 
     const weightStepper = stepper({
@@ -325,35 +352,52 @@ function setRow(entry, set, index, refreshSets) {
         label: 'weight',
         decimals: true,
         precision: weightPrecision(unit),
+        className: 'stepper-set',
         onStep: (base, direction) => stepWeight(base, direction, false, unit),
         onChange: (value) => { set.weightKg = fromDisplay(value, unit); updateBanner(); persist(); },
     });
 
+    // RIR ("approximate RIR" per set, per the plan) doesn't apply to warm-ups
+    // — they're a ramp-up, not a working set — so that column stays a plain
+    // dash there instead of a control.
+    const rirCell = set.warmup
+        ? el('div', { class: 'set-rir-empty', text: '–' })
+        : stepper({
+              value: set.rir ?? DEFAULTS.rir,
+              min: 0,
+              max: 10,
+              label: 'RIR',
+              className: 'stepper-compact',
+              onChange: (value) => { set.rir = value; refreshProgress(); persist(); },
+          });
+
     const check = el('button', {
         class: `set-check${set.done ? ' done' : ''}`,
         type: 'button',
-        'aria-label': `Mark set ${index + 1} done`,
+        'aria-label': `Mark set ${label} done`,
         text: '✓',
     });
 
     // The index cell doubles as the delete control while the block is in edit
     // mode. A permanent delete column doesn't fit at 375px — it squeezes the
-    // weight value down to ~28px, which clips "42.5".
+    // weight value down to ~28px, which clips "42.5". Warm-up sets get a
+    // "W1, W2…" label, numbered separately from the working sets.
     const indexCell = el('div', { class: 'set-index-cell' }, [
-        el('span', { class: 'set-index', text: String(index + 1) }),
+        el('span', { class: `set-index${set.warmup ? ' set-index-warmup' : ''}`, text: label }),
         el('button', {
             class: 'set-remove',
             type: 'button',
-            'aria-label': `Remove set ${index + 1}`,
+            'aria-label': `Remove set ${label}`,
             text: '×',
-            onclick: () => removeSet(entry, index, refreshSets),
+            onclick: () => removeSet(entry, index, label, refreshSets),
         }),
     ]);
 
-    const row = el('div', { class: `set-row${set.done ? ' done' : ''}` }, [
+    const row = el('div', { class: `set-row${set.done ? ' done' : ''}${set.warmup ? ' set-row-warmup' : ''}` }, [
         indexCell,
         repsStepper,
         weightStepper,
+        rirCell,
         check,
     ]);
 
@@ -366,11 +410,14 @@ function setRow(entry, set, index, refreshSets) {
         check.classList.toggle('done', set.done);
         updateBanner();
         syncElapsedTimer();
+        refreshProgress();
         persist();
 
         if (set.done) {
             playSetComplete();
-            startRest(entry.restSeconds);
+            // Warm-ups are a ramp-up, not a working set — no need to eat into
+            // your session standing around a rest timer built for the real sets.
+            if (!set.warmup) startRest(entry.restSeconds);
         } else if (isResting()) {
             stopRest();
         }
@@ -379,7 +426,7 @@ function setRow(entry, set, index, refreshSets) {
     return row;
 }
 
-async function removeSet(entry, index, refreshSets) {
+async function removeSet(entry, index, label, refreshSets) {
     if (entry.sets.length <= 1) {
         toast('That’s the last set — remove the exercise instead');
         return;
@@ -389,7 +436,7 @@ async function removeSet(entry, index, refreshSets) {
     if (entry.sets[index].done) {
         const ok = await confirmSheet({
             title: 'Discard logged set',
-            message: `Set ${index + 1} of ${entry.exerciseName} is already ticked off. Discard it?`,
+            message: `Set ${label} of ${entry.exerciseName} is already ticked off. Discard it?`,
             confirmLabel: 'Discard',
             danger: true,
         });
@@ -581,12 +628,25 @@ function exerciseBlock(entry, entryIndex) {
     });
     syncSaveBack();
 
+    const progressBadge = el('div', {
+        class: 'progress-badge',
+        hidden: true,
+        text: '🎯 Ready to progress — every set hit target reps at your RIR. Add a little weight next time.',
+    });
+    const refreshProgress = () => { progressBadge.hidden = !isReadyToProgress(entry); };
+
     // Rebuilt in place rather than via a full render(), so removing a set
     // doesn't reset scroll position or drop you out of edit mode.
     const setList = el('div', { class: 'set-list' });
     const refreshSets = () => {
         clear(setList);
-        entry.sets.forEach((set, index) => setList.append(setRow(entry, set, index, refreshSets)));
+        let workingCount = 0;
+        let warmupCount = 0;
+        entry.sets.forEach((set, index) => {
+            const label = set.warmup ? `W${++warmupCount}` : String(++workingCount);
+            setList.append(setRow(entry, set, index, label, refreshSets, refreshProgress));
+        });
+        refreshProgress();
     };
     refreshSets();
 
@@ -633,6 +693,7 @@ function exerciseBlock(entry, entryIndex) {
             ]),
         ]),
 
+        progressBadge,
         carriedNote(entry),
         ghost ? el('div', { class: 'ghost-hint', text: ghost }) : null,
 
@@ -640,6 +701,7 @@ function exerciseBlock(entry, entryIndex) {
             el('span', { text: '#' }),
             el('span', { text: 'Reps' }),
             el('span', { text: `Weight (${getUnit()})` }),
+            el('span', { text: 'RIR' }),
             el('span', { text: '' }),
         ]),
 
@@ -654,6 +716,12 @@ function exerciseBlock(entry, entryIndex) {
         ]),
 
         el('div', { class: 'block-actions' }, [
+            el('button', {
+                class: 'btn btn-outline btn-small',
+                type: 'button',
+                text: '+ Warm-up',
+                onclick: () => addWarmupSet(entry, refreshSets),
+            }),
             el('button', {
                 class: 'btn btn-outline btn-small',
                 type: 'button',
@@ -675,8 +743,31 @@ function addSet(entry, refreshSets) {
     entry.sets.push({
         reps: last?.reps ?? entry.targetReps ?? DEFAULTS.reps,
         weightKg: last?.weightKg ?? 0,
+        rir: last?.rir ?? DEFAULTS.rir,
         done: false,
         completedAt: null,
+    });
+    persist();
+    refreshSets();
+    updateBanner();
+    syncElapsedTimer();
+}
+
+/**
+ * Warm-up sets always sit ahead of the working sets in the array — inserted
+ * right after any existing warm-ups, never mixed in among working sets — so
+ * "last working set" lookups elsewhere (addSet, ghost text) keep working
+ * unchanged via `.at(-1)`.
+ */
+function addWarmupSet(entry, refreshSets) {
+    const warmupCount = entry.sets.filter((s) => s.warmup).length;
+    const firstWorking = entry.sets.find((s) => !s.warmup);
+    entry.sets.splice(warmupCount, 0, {
+        reps: firstWorking?.reps ?? entry.targetReps ?? DEFAULTS.reps,
+        weightKg: firstWorking?.weightKg ?? 0,
+        done: false,
+        completedAt: null,
+        warmup: true,
     });
     persist();
     refreshSets();
@@ -832,10 +923,10 @@ function idleView() {
 }
 
 function summaryText() {
-    const doneSets = session.entries.reduce((sum, e) => sum + e.sets.filter((s) => s.done).length, 0);
-    const totalSets = session.entries.reduce((sum, e) => sum + e.sets.length, 0);
+    const doneSets = session.entries.reduce((sum, e) => sum + e.sets.filter((s) => !s.warmup && s.done).length, 0);
+    const totalSets = session.entries.reduce((sum, e) => sum + e.sets.filter((s) => !s.warmup).length, 0);
     const volume = session.entries.reduce(
-        (sum, e) => sum + e.sets.filter((s) => s.done).reduce((v, s) => v + s.weightKg * s.reps, 0),
+        (sum, e) => sum + e.sets.filter((s) => !s.warmup && s.done).reduce((v, s) => v + s.weightKg * s.reps, 0),
         0,
     );
     const elapsed = formatDuration(Date.now() - new Date(session.startedAt));

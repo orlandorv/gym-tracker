@@ -14,6 +14,7 @@ export function stepper({
     suffix = '',
     decimals = false,
     precision = 2,
+    className = '',
     onChange,
     onStep,
 }) {
@@ -73,7 +74,7 @@ export function stepper({
         suffix ? el('span', { class: 'stepper-suffix', text: suffix }) : null,
     ]);
 
-    const wrap = el('div', { class: 'stepper' }, [minus, valueBox, plus]);
+    const wrap = el('div', { class: `stepper${className ? ` ${className}` : ''}` }, [minus, valueBox, plus]);
 
     wrap.setValue = (next) => {
         input.value = String(Math.round(clamp(next) * factor) / factor);

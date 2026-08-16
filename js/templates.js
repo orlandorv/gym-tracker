@@ -32,7 +32,21 @@ function renderRows() {
             max: 20,
             onChange: (value) => { entry.sets = value; },
         });
-        setsField.classList.add('span-2');
+        const rirField = labelledStepper('RIR', {
+            value: entry.rir ?? DEFAULTS.rir,
+            min: 0,
+            max: 10,
+            onChange: (value) => { entry.rir = value; },
+        });
+        // The ceiling of the rep range, not a literal per-set target — double
+        // progression only adds weight once every working set reaches this
+        // number at the intended RIR. Actual reps are still logged live.
+        const targetRepsField = labelledStepper('Target reps', {
+            value: entry.reps ?? DEFAULTS.reps,
+            min: 1,
+            max: 100,
+            onChange: (value) => { entry.reps = value; },
+        });
         const restField = labelledStepper('Rest', {
             value: entry.restSeconds,
             min: 5, // 0 silently meant "don't start a timer" — never a real choice
@@ -41,7 +55,6 @@ function renderRows() {
             suffix: 's',
             onChange: (value) => { entry.restSeconds = value; },
         });
-        restField.classList.add('span-2');
 
         // Always with the exercise, regardless of which template it's in —
         // edits here write straight to the exercise record, same as editing
@@ -108,7 +121,7 @@ function renderRows() {
                         }, ['×']),
                     ]),
                 ]),
-                el('div', { class: 'stepper-grid' }, [setsField, restField]),
+                el('div', { class: 'stepper-grid' }, [setsField, rirField, targetRepsField, restField]),
                 exerciseNoteField,
                 templateNoteField,
             ]),

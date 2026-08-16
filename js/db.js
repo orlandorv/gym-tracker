@@ -5,6 +5,9 @@ export const DEFAULTS = {
     sets: 3,
     reps: 10,
     restSeconds: 90,
+    // Middle of the plan's own "1-2 RIR on compounds, ~1 on isolation" range —
+    // a neutral starting point until a template sets something more specific.
+    rir: 2,
 };
 
 export function uid() {
@@ -155,11 +158,11 @@ class Database {
     }
 
     /**
-     * Seeds and refreshes the stock library in a single transaction. Stock
-     * entries are app-owned content — they aren't user-editable, so their
-     * fields are overwritten to pick up new ones (v1 records have no
-     * `attachment`) and to undo v1's bug of writing isCustom:true over
-     * every seed. Anything the user attached is preserved.
+     * Inserts any default exercise that isn't already in the store, in a
+     * single transaction. Every field is user-editable (equipment,
+     * attachment, name, notes — all of it), so once a row exists this never
+     * touches it again: re-running the seed must not stomp an edit the user
+     * made to a stock exercise.
      */
     seedExercises(defaults) {
         return this._run('exercises', 'readwrite', (tx) => {
@@ -167,16 +170,54 @@ class Database {
             defaults.forEach((exercise) => {
                 const request = store.get(exercise.id);
                 request.onsuccess = () => {
-                    const existing = request.result;
+                    if (request.result) return;
                     store.put({
-                        createdAt: existing?.createdAt || new Date().toISOString(),
-                        mediaId: existing?.mediaId || null,
+                        createdAt: new Date().toISOString(),
+                        mediaId: null,
                         ...exercise,
                         isCustom: false,
                     });
                 };
             });
         });
+    }
+
+    /**
+     * Removes stock exercises (isCustom: false) that are no longer in the
+     * current default set — e.g. after swapping in a different routine's
+     * exercise list — and strips them out of any template that referenced
+     * them. Exercises the user added themselves (isCustom: true) are never
+     * touched. Workout history is untouched too: entries snapshot exercise
+     * name/muscle/equipment independently, so it survives the exercise
+     * record being deleted.
+     */
+    async pruneStockExercises(keepIds) {
+        const [exercises, templates] = await Promise.all([this._getAll('exercises'), this._getAll('templates')]);
+        const toRemove = exercises.filter((e) => e.isCustom === false && !keepIds.has(e.id));
+        if (!toRemove.length) return toRemove;
+
+        const removedIds = new Set(toRemove.map((e) => e.id));
+
+        await this._run(['exercises', 'templates', 'media'], 'readwrite', (tx) => {
+            const exerciseStore = tx.objectStore('exercises');
+            const templateStore = tx.objectStore('templates');
+            const mediaStore = tx.objectStore('media');
+
+            toRemove.forEach((exercise) => {
+                exerciseStore.delete(exercise.id);
+                if (exercise.mediaId) mediaStore.delete(exercise.mediaId);
+            });
+
+            templates.forEach((template) => {
+                if (!Array.isArray(template.exercises)) return;
+                const filtered = template.exercises.filter((entry) => !removedIds.has(entry.exerciseId));
+                if (filtered.length !== template.exercises.length) {
+                    templateStore.put({ ...template, exercises: filtered });
+                }
+            });
+        });
+
+        return toRemove;
     }
 
     // --- Media -----------------------------------------------------------

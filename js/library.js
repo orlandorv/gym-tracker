@@ -105,10 +105,9 @@ async function openDetails(exerciseId) {
     if (exercise.attachment) body.append(field('Attachment / setup', exercise.attachment));
     body.append(field('Form notes', exercise.notes));
 
-    // Personal note: separate from the (stock, uneditable) Form notes above —
-    // a reminder that's always with this exercise regardless of which
-    // template it's used in. Editable even on stock exercises, unlike the
-    // rest of the record.
+    // Personal note: separate from Form notes above — a quick reminder
+    // that's always with this exercise, editable inline without opening the
+    // full Edit form, and mirrored in the Template builder.
     body.append(
         el('div', { class: 'detail-field note-field-inline' }, [
             noteField({
@@ -124,27 +123,23 @@ async function openDetails(exerciseId) {
     );
 
     const actions = clear($('#exercise-detail-actions'));
-    if (exercise.isCustom) {
-        actions.append(
-            el('button', {
-                class: 'btn btn-outline',
-                type: 'button',
-                text: 'Edit',
-                onclick: () => {
-                    closeModal('exercise-details-modal');
-                    openExerciseForm(exercise.id);
-                },
-            }),
-            el('button', {
-                class: 'btn btn-danger',
-                type: 'button',
-                text: 'Delete',
-                onclick: () => deleteExercise(exercise),
-            }),
-        );
-    } else {
-        actions.append(el('p', { class: 'hint', text: 'Stock exercises can’t be edited — add a custom one to tweak the setup.' }));
-    }
+    actions.append(
+        el('button', {
+            class: 'btn btn-outline',
+            type: 'button',
+            text: 'Edit',
+            onclick: () => {
+                closeModal('exercise-details-modal');
+                openExerciseForm(exercise.id);
+            },
+        }),
+        el('button', {
+            class: 'btn btn-danger',
+            type: 'button',
+            text: 'Delete',
+            onclick: () => deleteExercise(exercise),
+        }),
+    );
 
     openModal('exercise-details-modal');
 }
@@ -237,7 +232,9 @@ async function submitExerciseForm(event) {
         attachment: $('#exercise-attachment').value.trim(),
         notes: $('#exercise-notes').value.trim(),
         mediaId,
-        isCustom: true,
+        // Editing a stock exercise's setup doesn't make it "yours" — only a
+        // genuinely new exercise is custom. Preserves the badge's meaning.
+        isCustom: existing ? existing.isCustom : true,
     });
 
     await loadExercises();

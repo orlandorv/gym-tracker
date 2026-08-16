@@ -81,6 +81,7 @@ export function lastNote(exerciseId) {
 export async function bootstrap() {
     await database.init();
     await database.seedExercises(DEFAULT_EXERCISES);
+    await database.pruneStockExercises(new Set(DEFAULT_EXERCISES.map((exercise) => exercise.id)));
     setUnit(await database.getSetting('unit', 'kg'));
     await Promise.all([loadExercises(), loadTemplates(), loadWorkouts()]);
 }
