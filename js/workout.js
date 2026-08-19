@@ -4,6 +4,7 @@ import { state, loadWorkouts, findExercise, lastPerformance, lastNote } from './
 import { $, el, clear, confirmSheet, toast, noteField } from './dom.js';
 import { stepper } from './stepper.js';
 import { openPicker } from './picker.js';
+import { openPlateCalculator } from './plates.js';
 import { startRest, stopRest, isResting } from './timer.js';
 import { canVibrate, playSetComplete, playWorkoutFinished } from './sfx.js';
 import { getUnit, toDisplay, fromDisplay, stepWeight, weightPrecision, formatNumber, formatWeight, formatDuration, formatStopwatch } from './units.js';
@@ -293,6 +294,12 @@ function noteSection(entry) {
  * grinding past it — it's time to add weight rather than repeat the same
  * numbers next session.
  */
+/** Seeds the plate calculator with the top working set — the one you'd
+ *  actually be loading the bar for. */
+function heaviestWorkingWeight(entry) {
+    return entry.sets.reduce((max, set) => (set.warmup ? max : Math.max(max, set.weightKg)), 0);
+}
+
 function isReadyToProgress(entry) {
     const working = entry.sets.filter((s) => !s.warmup);
     if (!working.length || !Number.isFinite(entry.targetReps)) return false;
@@ -732,6 +739,17 @@ function exerciseBlock(entry, entryIndex) {
                 text: '+ Add set',
                 onclick: () => addSet(entry, refreshSets),
             }),
+            // Only for barbell work — plate maths is meaningless on a cable
+            // stack or a pin-loaded machine, and the button would be noise on
+            // most of the list.
+            entry.equipment === 'Barbell'
+                ? el('button', {
+                      class: 'btn btn-outline btn-small',
+                      type: 'button',
+                      text: 'Plates',
+                      onclick: () => openPlateCalculator(heaviestWorkingWeight(entry)),
+                  })
+                : null,
         ]),
 
         templateNoteField,

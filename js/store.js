@@ -1,6 +1,7 @@
 import { database } from './db.js';
 import { DEFAULT_EXERCISES } from './seed.js';
 import { setUnit } from './units.js';
+import { loadBarWeights } from './plates.js';
 
 // Shared in-memory cache. Every view reads from here rather than hitting
 // IndexedDB on each render — the library re-renders on every keystroke.
@@ -84,5 +85,6 @@ export async function bootstrap() {
     await database.pruneStockExercises(new Set(DEFAULT_EXERCISES.map((exercise) => exercise.id)));
     await database.excludeExampleTemplatesOnce();
     setUnit(await database.getSetting('unit', 'kg'));
+    await loadBarWeights();
     await Promise.all([loadExercises(), loadTemplates(), loadWorkouts()]);
 }
