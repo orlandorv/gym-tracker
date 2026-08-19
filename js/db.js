@@ -258,6 +258,36 @@ class Database {
         return this._delete('templates', id);
     }
 
+    /**
+     * One-time fixup for the "Example: …" templates — reference copies of the
+     * real plan, so counting them double-counted every weekly volume target
+     * once `inWeeklyPlan` was introduced.
+     *
+     * Deliberately runs once and never again (guarded by a setting) and only
+     * touches templates that have never had the flag set either way, so
+     * turning one back on in the editor afterwards sticks. The name match is
+     * a migration heuristic, not app logic: templates created from here on
+     * are governed purely by the toggle, whatever they're called.
+     */
+    async excludeExampleTemplatesOnce() {
+        if (await this.getSetting('exampleTemplatesExcluded', false)) return 0;
+
+        const templates = await this._getAll('templates');
+        const unflagged = templates.filter(
+            (template) => template.inWeeklyPlan === undefined && String(template.name).startsWith('Example:'),
+        );
+
+        if (unflagged.length) {
+            await this._run('templates', 'readwrite', (tx) => {
+                const store = tx.objectStore('templates');
+                unflagged.forEach((template) => store.put({ ...template, inWeeklyPlan: false }));
+            });
+        }
+
+        await this.setSetting('exampleTemplatesExcluded', true);
+        return unflagged.length;
+    }
+
     // --- Workouts --------------------------------------------------------
 
     getWorkouts() {
