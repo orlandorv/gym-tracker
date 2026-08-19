@@ -1433,6 +1433,34 @@ body.resting-room #app {
     border-top: 1px solid var(--border);
 }
 
+.pr-estimate {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin-top: 7px;
+}
+
+.pr-estimate-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+}
+
+.pr-estimate-value {
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.pr-estimate-source {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
 /* --- History ---------------------------------------------------------- */
 
 .history-group-label {
