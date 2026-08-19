@@ -4,6 +4,7 @@ import { $, el, clear, openModal, closeModal, confirmSheet, toast } from './dom.
 import { formatWeight, formatDuration } from './units.js';
 import { computeRecords } from './records.js';
 import { renderVolume } from './volume.js';
+import { renderCheckin } from './checkin.js';
 
 let onChanged = null;
 
@@ -76,6 +77,7 @@ export function renderHistory() {
     // Shown even with nothing logged — an empty week against real targets is
     // itself the useful reading.
     renderVolume(body);
+    renderCheckin(body);
 
     if (!state.workouts.length) {
         body.append(

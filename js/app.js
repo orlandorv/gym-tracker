@@ -8,6 +8,7 @@ import { initSfx } from './sfx.js';
 import { initWorkout, render as renderWorkout, startWorkout, resumeActive } from './workout.js';
 import { renderRecords } from './records.js';
 import { initHistory, renderHistory } from './history.js';
+import { initCheckin } from './checkin.js';
 import { initSettings } from './settings.js';
 
 function switchTab(tab) {
@@ -87,6 +88,7 @@ async function start() {
         },
     });
     initHistory({ onHistoryChanged: renderRecords });
+    initCheckin({ onCheckinChanged: renderHistory });
     initSettings({ onDataChanged: renderAll, onUnitChanged: renderAll });
 
     await resumeActive();

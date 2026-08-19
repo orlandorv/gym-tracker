@@ -209,6 +209,25 @@
         </div>
     </div>
 
+    <!-- Modal: weekly check-in -->
+    <div id="checkin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 id="checkin-form-title">Weekly Check-In</h2>
+                    <div id="checkin-week" class="modal-subtitle"></div>
+                </div>
+                <button class="modal-close icon-btn" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div id="checkin-body" class="modal-body"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+                <button type="button" class="btn btn-danger" id="delete-checkin-btn" hidden>Delete</button>
+                <button type="button" class="btn btn-primary" id="checkin-save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: plate calculator -->
     <div id="plate-modal" class="modal">
         <div class="modal-content">

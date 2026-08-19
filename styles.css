@@ -1538,6 +1538,76 @@ body.resting-room #app {
     padding: 4px 8px;
 }
 
+/* --- Weekly check-in --------------------------------------------------- */
+
+.checkin-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.checkin-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.checkin-stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.checkin-stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.checkin-stat-value {
+    font-size: 14px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+.checkin-trend {
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.checkin-trend.on-target {
+    color: var(--success);
+}
+
+.checkin-derived {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding-bottom: 14px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+}
+
+.checkin-hint {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+}
+
+.modal-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
 /* --- Plate calculator -------------------------------------------------- */
 
 .plate-result {

@@ -1,5 +1,5 @@
 const DB_NAME = 'GymTrackerDB';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export const DEFAULTS = {
     sets: 3,
@@ -66,6 +66,12 @@ class Database {
 
                 if (!db.objectStoreNames.contains('settings')) {
                     db.createObjectStore('settings', { keyPath: 'key' });
+                }
+
+                // Keyed by the Monday of the week it covers, so filling one in
+                // twice updates rather than duplicating. Added in v3.
+                if (!db.objectStoreNames.contains('checkins')) {
+                    db.createObjectStore('checkins', { keyPath: 'id' });
                 }
 
                 // v1 stored template.exercises as bare id strings; v2 needs
@@ -312,6 +318,21 @@ class Database {
         return workouts.find((w) => w.status === 'active') || null;
     }
 
+    // --- Weekly check-ins -------------------------------------------------
+
+    getCheckins() {
+        return this._getAll('checkins');
+    }
+
+    /** Upsert — `id` is the week's Monday, so re-saving a week overwrites it. */
+    saveCheckin(checkin) {
+        return this._put('checkins', { ...checkin, savedAt: new Date().toISOString() });
+    }
+
+    deleteCheckin(id) {
+        return this._delete('checkins', id);
+    }
+
     // --- Settings --------------------------------------------------------
 
     async getSetting(key, fallback = null) {
@@ -326,22 +347,24 @@ class Database {
     // --- Backup ----------------------------------------------------------
 
     async exportAll() {
-        const [exercises, templates, workouts, settings] = await Promise.all([
+        const [exercises, templates, workouts, settings, checkins] = await Promise.all([
             this._getAll('exercises'),
             this._getAll('templates'),
             this._getAll('workouts'),
             this._getAll('settings'),
+            this._getAll('checkins'),
         ]);
         // Media blobs are deliberately excluded — they can run to hundreds of
         // megabytes and would make the backup file unusable.
         return {
             format: 'gym-tracker-backup',
-            version: 2,
+            version: 3,
             exportedAt: new Date().toISOString(),
             exercises: exercises.map(({ mediaId, ...rest }) => rest),
             templates,
             workouts,
             settings,
+            checkins,
         };
     }
 
@@ -349,7 +372,8 @@ class Database {
         if (!data || data.format !== 'gym-tracker-backup') {
             throw new Error('Not a Gym Tracker backup file.');
         }
-        const stores = ['exercises', 'templates', 'workouts', 'settings'];
+        // Older backups simply have no `checkins` key — the loop skips it.
+        const stores = ['exercises', 'templates', 'workouts', 'settings', 'checkins'];
         await this._run(stores, 'readwrite', (tx) => {
             stores.forEach((name) => {
                 const rows = data[name];

@@ -1,7 +1,7 @@
 // Bump this on every deploy that changes any cached file. Old caches are
 // dropped automatically on activate, so this one line is the whole release
 // process — nothing else in here needs to change per deploy.
-const CACHE_VERSION = 'v20';
+const CACHE_VERSION = 'v21';
 const CACHE_NAME = `gym-tracker-${CACHE_VERSION}`;
 
 // Registered as a relative path from index.html, so these resolve under
@@ -29,6 +29,7 @@ const APP_SHELL = [
     './js/history.js',
     './js/volume.js',
     './js/plates.js',
+    './js/checkin.js',
     './js/settings.js',
     './icons/icon-180.png',
     './icons/icon-192.png',

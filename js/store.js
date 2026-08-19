@@ -9,6 +9,7 @@ export const state = {
     exercises: [],
     templates: [],
     workouts: [],
+    checkins: [],
     activeWorkout: null,
 };
 
@@ -43,6 +44,12 @@ export async function loadWorkouts() {
     state.activeWorkout = all.find((w) => w.status === 'active') || null;
     emit('workouts');
     return state.workouts;
+}
+
+export async function loadCheckins() {
+    state.checkins = await database.getCheckins();
+    emit('checkins');
+    return state.checkins;
 }
 
 export function findExercise(id) {
@@ -86,5 +93,5 @@ export async function bootstrap() {
     await database.excludeExampleTemplatesOnce();
     setUnit(await database.getSetting('unit', 'kg'));
     await loadBarWeights();
-    await Promise.all([loadExercises(), loadTemplates(), loadWorkouts()]);
+    await Promise.all([loadExercises(), loadTemplates(), loadWorkouts(), loadCheckins()]);
 }
