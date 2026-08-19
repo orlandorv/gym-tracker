@@ -1510,6 +1510,90 @@ body.resting-room #app {
     padding: 4px 8px;
 }
 
+/* --- Weekly volume ---------------------------------------------------- */
+
+.volume-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.volume-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.volume-title {
+    font-weight: 650;
+    font-size: 15px;
+}
+
+.volume-range {
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.volume-row + .volume-row {
+    margin-top: 11px;
+}
+
+.volume-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.volume-muscle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.volume-count {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.volume-count.met {
+    color: var(--success);
+}
+
+.volume-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-raised);
+    overflow: hidden;
+}
+
+.volume-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--primary);
+}
+
+.volume-fill.met {
+    background: var(--success);
+}
+
+/* Logged, but no template prescribes it — shown as trained without implying
+   any target was hit. */
+.volume-fill.untracked {
+    background: var(--border);
+}
+
 /* --- Settings --------------------------------------------------------- */
 
 .setting-row {

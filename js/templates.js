@@ -1,6 +1,6 @@
 import { database, DEFAULTS } from './db.js';
 import { state, loadTemplates, loadExercises, findExercise } from './store.js';
-import { $, el, clear, openModal, closeModal, confirmSheet, toast, noteField } from './dom.js';
+import { $, $$, el, clear, openModal, closeModal, confirmSheet, toast, noteField } from './dom.js';
 import { labelledStepper } from './stepper.js';
 import { openPicker } from './picker.js';
 import { formatRest } from './units.js';
@@ -137,6 +137,18 @@ function move(index, direction) {
     renderRows();
 }
 
+/**
+ * Yes/No for whether this template's sets count toward the weekly volume
+ * targets on History. Undefined means yes, so templates predating the flag
+ * keep counting without a migration.
+ */
+function syncPlanToggle() {
+    const inPlan = draft.inWeeklyPlan !== false;
+    $$('#template-in-plan button').forEach((button) => {
+        button.classList.toggle('active', (button.dataset.value === 'yes') === inPlan);
+    });
+}
+
 export function openTemplateForm(templateId = null) {
     const existing = templateId ? state.templates.find((t) => t.id === templateId) : null;
 
@@ -147,6 +159,7 @@ export function openTemplateForm(templateId = null) {
     $('#template-form-title').textContent = existing ? 'Edit Template' : 'New Template';
     $('#template-name').value = draft.name;
     $('#delete-template-btn').hidden = !existing;
+    syncPlanToggle();
     renderRows();
     openModal('template-form-modal');
 }
@@ -243,6 +256,13 @@ export function initTemplates({ onStart, onTemplatesChanged }) {
     $('#template-add-exercise').addEventListener('click', addExerciseToDraft);
     $('#template-form').addEventListener('submit', submitTemplate);
     $('#delete-template-btn').addEventListener('click', deleteTemplate);
+
+    $('#template-in-plan').addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-value]');
+        if (!button || !draft) return;
+        draft.inWeeklyPlan = button.dataset.value === 'yes';
+        syncPlanToggle();
+    });
 
     $('#templates-list').addEventListener('click', (event) => {
         const startBtn = event.target.closest('[data-start]');

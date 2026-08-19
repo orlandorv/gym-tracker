@@ -3,6 +3,7 @@ import { state, loadWorkouts } from './store.js';
 import { $, el, clear, openModal, closeModal, confirmSheet, toast } from './dom.js';
 import { formatWeight, formatDuration } from './units.js';
 import { computeRecords } from './records.js';
+import { renderVolume } from './volume.js';
 
 let onChanged = null;
 
@@ -71,8 +72,12 @@ function workoutCard(workout) {
 export function renderHistory() {
     const body = clear($('#history-body'));
 
+    renderSummary(body);
+    // Shown even with nothing logged — an empty week against real targets is
+    // itself the useful reading.
+    renderVolume(body);
+
     if (!state.workouts.length) {
-        renderSummary(body);
         body.append(
             el('div', { class: 'empty-state' }, [
                 el('p', { text: 'No workouts finished yet.' }),
@@ -81,8 +86,6 @@ export function renderHistory() {
         );
         return;
     }
-
-    renderSummary(body);
 
     let currentDay = null;
     let dayStack = null;

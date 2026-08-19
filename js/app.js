@@ -81,7 +81,10 @@ async function start() {
     });
     initTemplates({
         onStart: (templateId) => startWorkout(templateId),
-        onTemplatesChanged: renderWorkout,
+        onTemplatesChanged: () => {
+            renderWorkout();
+            renderHistory(); // weekly volume targets are derived from templates
+        },
     });
     initHistory({ onHistoryChanged: renderRecords });
     initSettings({ onDataChanged: renderAll, onUnitChanged: renderAll });
