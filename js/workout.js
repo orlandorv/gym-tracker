@@ -83,12 +83,16 @@ function syncElapsedTimer() {
 function entryFromTemplate(templateEntry) {
     const exercise = findExercise(templateEntry.exerciseId);
     const previous = lastPerformance(templateEntry.exerciseId);
-    // Seed the bar with what you used last time — far more often right than
-    // zero, and one less thing to dial in between sets.
-    const seedWeight = previous?.sets.at(-1)?.weightKg ?? 0;
+    const previousSets = previous?.sets ?? [];
+    // Each set remembers its own weight from last time — set 1 seeds from
+    // last time's set 1, set 2 from set 2, and so on, rather than copying
+    // whatever the final set happened to be onto every row. A set beyond
+    // what you logged last time (e.g. you added one to the template since)
+    // falls back to the last known weight instead of dropping to zero.
+    const lastKnownWeight = previousSets.at(-1)?.weightKg ?? 0;
     // What you actually hit last time beats the template's static target,
     // which itself beats the flat app-wide default.
-    const seedRir = previous?.sets.at(-1)?.rir ?? templateEntry.rir ?? DEFAULTS.rir;
+    const seedRir = previousSets.at(-1)?.rir ?? templateEntry.rir ?? DEFAULTS.rir;
 
     return {
         exerciseId: templateEntry.exerciseId,
@@ -103,10 +107,10 @@ function entryFromTemplate(templateEntry) {
         // whatever set.rir gets edited to mid-session.
         targetRir: templateEntry.rir ?? DEFAULTS.rir,
         note: '',
-        sets: Array.from({ length: templateEntry.sets }, () => ({
+        sets: Array.from({ length: templateEntry.sets }, (_, i) => ({
             reps: templateEntry.reps,
-            weightKg: seedWeight,
-            rir: seedRir,
+            weightKg: previousSets[i]?.weightKg ?? lastKnownWeight,
+            rir: previousSets[i]?.rir ?? seedRir,
             done: false,
             completedAt: null,
         })),
