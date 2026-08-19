@@ -110,8 +110,17 @@ export function renderVolume(container) {
     ]);
 
     if (!muscles.length) {
+        // "Build a template" is actively misleading when templates exist but
+        // are all opted out — say which of the two situations this actually is.
+        const excluded = state.templates.filter((template) => template.inWeeklyPlan === false).length;
+
         section.append(
-            el('p', { class: 'hint', text: 'Build a template — the sets it prescribes become this week’s target.' }),
+            el('p', {
+                class: 'hint',
+                text: excluded
+                    ? `No templates are counting toward the weekly plan (${excluded} opted out). Open one from Templates and switch “Counts toward weekly plan” to Yes.`
+                    : 'Build a template — the sets it prescribes become this week’s target.',
+            }),
         );
     } else {
         muscles.forEach((muscle) => section.append(volumeRow(muscle, actual.get(muscle) || 0, targets.get(muscle) || 0)));
